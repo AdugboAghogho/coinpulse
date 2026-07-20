@@ -67,7 +67,7 @@ export async function getPools(
     const poolData = await fetcher<{ data: PoolData[] }>('/onchain/search/pools', { query: id });
 
     return poolData.data?.[0] ?? fallback;
-  // } catch {
-  //   return fallback;
-  // }
+  } catch {
+    return fallback;
+  }
 }
