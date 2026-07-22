@@ -34,13 +34,12 @@ const CandlestickChart = ({
 
   const fetchOHLCData = async (selectedPeriod: Period) => {
     try {
-      const { days, interval } = PERIOD_CONFIG[selectedPeriod];
+      const { days } = PERIOD_CONFIG[selectedPeriod];
 
       const newData = await fetcher<OHLCData[]>(`/coins/${coinId}/ohlc`, {
         vs_currency: 'usd',
         days,
-        interval,
-        precision: 'full',
+        // Removed 'interval' and 'precision' to prevent the 400 API Error
       });
 
       startTransition(() => {
@@ -105,7 +104,6 @@ const CandlestickChart = ({
 
     if (liveOhlcv) {
       const liveTimestamp = liveOhlcv[0];
-
       const lastHistoricalCandle = convertedToSeconds[convertedToSeconds.length - 1];
 
       if (lastHistoricalCandle && lastHistoricalCandle[0] === liveTimestamp) {
