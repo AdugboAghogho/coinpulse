@@ -16,8 +16,7 @@ const Page = async ({ params }: NextPageProps) => {
     fetcher<OHLCData>(`/coins/${id}/ohlc`, {
       vs_currency: 'usd',
       days: 1,
-      interval: 'hourly',
-      precision: 'full',
+      // Removed 'interval' and 'precision' here!
     }),
   ]);
 
@@ -99,6 +98,8 @@ const Page = async ({ params }: NextPageProps) => {
             ))}
           </ul>
         </div>
+
+        <p>Top gainer & loser</p>
       </section>
     </main>
   );
