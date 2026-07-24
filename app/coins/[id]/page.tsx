@@ -5,6 +5,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import LiveDataWrapper from '@/components/LiveDataWrapper';
 import Converter from '@/components/Converter';
+import SimilarCoins from '@/components/SimilarCoins';
 
 const Page = async ({ params }: NextPageProps) => {
   const { id } = await params;
@@ -98,8 +99,11 @@ const Page = async ({ params }: NextPageProps) => {
             ))}
           </ul>
         </div>
-
-        <p>Top gainer & loser</p>
+        
+        <SimilarCoins 
+          currentCoinId={id} 
+          categories={coinData.categories} 
+        />
       </section>
     </main>
   );

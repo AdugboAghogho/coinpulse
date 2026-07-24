@@ -1,12 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import SearchModal from '@/components/SearchModal'; // We will create this next
 
 const Header = () => {
   const pathname = usePathname();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
     <header>
@@ -26,7 +29,13 @@ const Header = () => {
             Home
           </Link>
 
-          <p>Search Modal</p>
+          {/* Replaced the <p> tag with a button to toggle state */}
+          <button 
+            onClick={() => setIsSearchOpen(true)}
+            className="nav-link cursor-pointer hover:text-white transition-colors"
+          >
+            Search
+          </button>
 
           <Link
             href="/coins"
@@ -38,6 +47,11 @@ const Header = () => {
           </Link>
         </nav>
       </div>
+
+      {/* Render the modal when state is true */}
+      {isSearchOpen && (
+        <SearchModal onClose={() => setIsSearchOpen(false)} />
+      )}
     </header>
   );
 };

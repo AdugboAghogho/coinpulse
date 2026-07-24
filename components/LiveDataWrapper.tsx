@@ -2,7 +2,6 @@
 
 import { Separator } from '@/components/ui/separator';
 import CandlestickChart from '@/components/CandlestickChart';
-// import { useCoinGeckoWebSocket } from '@/hooks/useCoinGeckoWebSocket';
 import { useCoinGeckoPolling } from '@/hooks/useCoinGeckoPolling';
 import DataTable from '@/components/DataTable';
 import { formatCurrency, timeAgo } from '@/lib/utils';
@@ -11,37 +10,54 @@ import CoinHeader from '@/components/CoinHeader';
 
 const LiveDataWrapper = ({ children, coinId, poolId, coin, coinOHLCData }: LiveDataProps) => {
   const [liveInterval, setLiveInterval] = useState<'1s' | '1m'>('1s');
-  // const { trades, ohlcv, price } = useCoinGeckoWebSocket({ coinId, poolId, liveInterval });
+
   const { trades, ohlcv, price } = useCoinGeckoPolling({
     coinId,
-    poolAddress: poolId,
+    symbol: coin.symbol, // Added missing symbol for CEX/Binance trade fallback
+    poolId,              // Corrected prop key from poolAddress to poolId
     intervalMs: 15000,
   });
 
   const tradeColumns: DataTableColumn<Trade>[] = [
     {
       header: 'Price',
-      cellClassName: 'price-cell',
-      cell: (trade) => (trade.price ? formatCurrency(trade.price) : '-'),
+      cellClassName: 'price-cell font-bold text-white',
+      cell: (trade) => {
+        // Uses trade.price, or calculates (value / amount) as a fallback
+        const unitPrice =
+          trade.price || (trade.value && trade.amount ? trade.value / trade.amount : 0);
+
+        return unitPrice ? (
+          <span className="font-bold text-white">
+            {formatCurrency(unitPrice)}
+          </span>
+        ) : (
+          '-'
+        );
+      },
     },
     {
       header: 'Amount',
       cellClassName: 'amount-cell',
-      cell: (trade) => trade.amount?.toFixed(4) ?? '-',
+      cell: (trade) => (trade.amount !== undefined ? trade.amount.toFixed(4) : '-'),
     },
     {
       header: 'Value',
-      cellClassName: 'value-cell',
+      cellClassName: 'value-cell font-bold',
       cell: (trade) => (trade.value ? formatCurrency(trade.value) : '-'),
     },
     {
       header: 'Buy/Sell',
       cellClassName: 'type-cell',
-      cell: (trade) => (
-        <span className={trade.type === 'b' ? 'text-green-500' : 'text-red-500'}>
-          {trade.type === 'b' ? 'Buy' : 'Sell'}
-        </span>
-      ),
+      cell: (trade) => {
+        // Accepts both 'buy' and 'b' to cover all API sources
+        const isBuy = trade.type === 'buy' || trade.type === 'b';
+        return (
+          <span className={isBuy ? 'text-green-500 font-semibold' : 'text-red-500 font-semibold'}>
+            {isBuy ? 'Buy' : 'Sell'}
+          </span>
+        );
+      },
     },
     {
       header: 'Time',
