@@ -20,6 +20,26 @@ const Categories = async () => {
           )),
       },
       {
+        header: '1h Change',
+        cellClassName: 'change-header-cell',
+        cell: (category) => {
+          const isTrendingUp = category.market_cap_change_1h > 0;
+
+          return (
+            <div className={cn('change-cell', isTrendingUp ? 'text-green-500' : 'text-red-500')}>
+              <p className="flex items-center">
+                {formatPercentage(category.market_cap_change_24h)}
+                {isTrendingUp ? (
+                  <TrendingUp width={16} height={16} />
+                ) : (
+                  <TrendingDown width={16} height={16} />
+                )}
+              </p>
+            </div>
+          );
+        },
+      },
+      {
         header: '24h Change',
         cellClassName: 'change-header-cell',
         cell: (category) => {
@@ -57,7 +77,7 @@ const Categories = async () => {
 
         <DataTable
           columns={columns}
-          data={categories?.slice(0, 10)}
+          data={categories?.slice(0, 20)}
           rowKey={(_, index) => index}
           tableClassName="mt-3"
         />

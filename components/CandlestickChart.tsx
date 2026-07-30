@@ -8,9 +8,19 @@ import {
   PERIOD_BUTTONS,
   PERIOD_CONFIG,
 } from '@/constants';
-import { CandlestickSeries, createChart, IChartApi, ISeriesApi } from 'lightweight-charts';
+import {
+  CandlestickSeries,
+  AreaSeries,
+  createChart,
+  IChartApi,
+  ISeriesApi,
+} from 'lightweight-charts';
 import { fetcher } from '@/lib/coingecko.actions';
 import { convertOHLCData } from '@/lib/utils';
+
+interface CandlestickChartPropsExtended extends CandlestickChartProps {
+  chartType?: 'candle' | 'line';
+}
 
 const CandlestickChart = ({
   children,
@@ -22,10 +32,11 @@ const CandlestickChart = ({
   mode = 'historical',
   liveInterval,
   setLiveInterval,
-}: CandlestickChartProps) => {
+  chartType = 'candle', // Added chartType with 'candle' default
+}: CandlestickChartPropsExtended) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const seriesRef = useRef<ISeriesApi<'Candlestick'> | ISeriesApi<'Area'> | any>(null);
   const prevOhlcDataLength = useRef<number>(data?.length || 0);
 
   const [period, setPeriod] = useState(initialPeriod);
@@ -57,6 +68,7 @@ const CandlestickChart = ({
     fetchOHLCData(newPeriod);
   };
 
+  // 1. CHART INITIALIZATION EFFECT
   useEffect(() => {
     const container = chartContainerRef.current;
     if (!container) return;
@@ -67,17 +79,38 @@ const CandlestickChart = ({
       ...getChartConfig(height, showTime),
       width: container.clientWidth,
     });
-    const series = chart.addSeries(CandlestickSeries, getCandlestickConfig());
+
+    let series: any;
+
+    if (chartType === 'line') {
+      series = chart.addSeries(AreaSeries, {
+        topColor: 'rgba(132, 204, 22, 0.35)', // #84cc16 lime glow
+        bottomColor: 'rgba(132, 204, 22, 0.0)',
+        lineColor: '#84cc16',
+        lineWidth: 2,
+      });
+    } else {
+      series = chart.addSeries(CandlestickSeries, getCandlestickConfig());
+    }
 
     const convertedToSeconds = ohlcData.map(
       (item) => [Math.floor(item[0] / 1000), item[1], item[2], item[3], item[4]] as OHLCData,
     );
 
-    series.setData(convertOHLCData(convertedToSeconds));
+    if (chartType === 'line') {
+      const lineData = convertedToSeconds.map((item) => ({
+        time: item[0] as any,
+        value: item[4], // Close price
+      }));
+      series.setData(lineData);
+    } else {
+      series.setData(convertOHLCData(convertedToSeconds));
+    }
+
     chart.timeScale().fitContent();
 
     chartRef.current = chart;
-    candleSeriesRef.current = series;
+    seriesRef.current = series;
 
     const observer = new ResizeObserver((entries) => {
       if (!entries.length) return;
@@ -89,12 +122,13 @@ const CandlestickChart = ({
       observer.disconnect();
       chart.remove();
       chartRef.current = null;
-      candleSeriesRef.current = null;
+      seriesRef.current = null;
     };
-  }, [height, period]);
+  }, [height, period, chartType]); // Re-runs instantly when chartType toggles
 
+  // 2. LIVE OHLCV MERGE & UPDATE EFFECT
   useEffect(() => {
-    if (!candleSeriesRef.current) return;
+    if (!seriesRef.current) return;
 
     const convertedToSeconds = ohlcData.map(
       (item) => [Math.floor(item[0] / 1000), item[1], item[2], item[3], item[4]] as OHLCData,
@@ -117,8 +151,16 @@ const CandlestickChart = ({
 
     merged.sort((a, b) => a[0] - b[0]);
 
-    const converted = convertOHLCData(merged);
-    candleSeriesRef.current.setData(converted);
+    if (chartType === 'line') {
+      const lineData = merged.map((item) => ({
+        time: item[0] as any,
+        value: item[4], // Close price
+      }));
+      seriesRef.current.setData(lineData);
+    } else {
+      const converted = convertOHLCData(merged);
+      seriesRef.current.setData(converted);
+    }
 
     const dataChanged = prevOhlcDataLength.current !== ohlcData.length;
 
@@ -126,7 +168,7 @@ const CandlestickChart = ({
       chartRef.current?.timeScale().fitContent();
       prevOhlcDataLength.current = ohlcData.length;
     }
-  }, [ohlcData, period, liveOhlcv, mode]);
+  }, [ohlcData, period, liveOhlcv, mode, chartType]);
 
   return (
     <div id="candlestick-chart">

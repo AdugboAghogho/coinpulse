@@ -7,16 +7,24 @@ import DataTable from '@/components/DataTable';
 import { formatCurrency, timeAgo } from '@/lib/utils';
 import { useState } from 'react';
 import CoinHeader from '@/components/CoinHeader';
+import ChartToolbar from '@/components/ChartToolbar';
 
 const LiveDataWrapper = ({ children, coinId, poolId, coin, coinOHLCData }: LiveDataProps) => {
   const [liveInterval, setLiveInterval] = useState<'1s' | '1m'>('1s');
 
+  const [chartType, setChartType] = useState<'candle' | 'line'>('candle');
+
   const { trades, ohlcv, price } = useCoinGeckoPolling({
     coinId,
-    symbol: coin.symbol, // Added missing symbol for CEX/Binance trade fallback
-    poolId,              // Corrected prop key from poolAddress to poolId
+    symbol: coin.symbol,
+    poolId,
     intervalMs: 15000,
   });
+
+  const handleBuyClick = () => {
+    // Action when user clicks "Buy": e.g. scroll to markets or trigger deposit modal
+    console.log(`Buy clicked for ${coin.symbol}`);
+  };
 
   const tradeColumns: DataTableColumn<Trade>[] = [
     {
@@ -28,9 +36,7 @@ const LiveDataWrapper = ({ children, coinId, poolId, coin, coinOHLCData }: LiveD
           trade.price || (trade.value && trade.amount ? trade.value / trade.amount : 0);
 
         return unitPrice ? (
-          <span className="font-bold text-white">
-            {formatCurrency(unitPrice)}
-          </span>
+          <span className="font-bold text-white">{formatCurrency(unitPrice)}</span>
         ) : (
           '-'
         );
@@ -81,11 +87,19 @@ const LiveDataWrapper = ({ children, coinId, poolId, coin, coinOHLCData }: LiveD
       <Separator className="divider" />
 
       <div className="trend">
+        <ChartToolbar
+          coinSymbol={coin.symbol}
+          chartType={chartType}
+          onChartTypeChange={setChartType}
+          onBuyClick={handleBuyClick}
+        />
+
         <CandlestickChart
           coinId={coinId}
           data={coinOHLCData}
           liveOhlcv={ohlcv}
           mode="live"
+          chartType={chartType}
           initialPeriod="daily"
           liveInterval={liveInterval}
           setLiveInterval={setLiveInterval}

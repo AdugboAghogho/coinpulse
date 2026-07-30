@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { cn, formatPercentage, formatCurrency } from '@/lib/utils';
 import DataTable from '@/components/DataTable';
 import CoinsPagination from '@/components/CoinsPagination';
+import { TrendingDown, TrendingUp } from 'lucide-react';
 
 const Coins = async ({ searchParams }: NextPageProps) => {
   const { page } = await searchParams;
@@ -50,6 +51,29 @@ const Coins = async ({ searchParams }: NextPageProps) => {
       cell: (coin) => formatCurrency(coin.current_price),
     },
     {
+      header: '1h Change',
+      cellClassName: 'change-cell',
+      cell: (coin) => {
+        const isTrendingUp = coin.price_change_percentage_1h > 0;
+
+        return (
+          <span
+            className={cn('change-value', {
+              'text-green-600': isTrendingUp,
+              'text-red-500': !isTrendingUp,
+            })}
+          >
+            {formatPercentage(coin.price_change_percentage_24h)}
+            {isTrendingUp ? (
+              <TrendingUp width={16} height={16} />
+            ) : (
+              <TrendingDown width={16} height={16} />
+            )}
+          </span>
+        );
+      },
+    },
+    {
       header: '24h Change',
       cellClassName: 'change-cell',
       cell: (coin) => {
@@ -62,8 +86,12 @@ const Coins = async ({ searchParams }: NextPageProps) => {
               'text-red-500': !isTrendingUp,
             })}
           >
-            {isTrendingUp && '+'}
             {formatPercentage(coin.price_change_percentage_24h)}
+            {isTrendingUp ? (
+              <TrendingUp width={16} height={16} />
+            ) : (
+              <TrendingDown width={16} height={16} />
+            )}
           </span>
         );
       },

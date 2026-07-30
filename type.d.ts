@@ -39,6 +39,7 @@ interface Ticker {
 type Period = 'daily' | 'weekly' | 'monthly' | '3months' | '6months' | 'yearly' | 'max';
 
 interface CoinMarketData {
+  price_change_percentage_1h: number;
   id: string;
   symbol: string;
   name: string;
@@ -240,6 +241,7 @@ interface LiveCoinHeaderProps {
 }
 
 interface Category {
+  market_cap_change_1h: number;
   name: string;
   top_3_coins: string[];
   market_cap_change_24h: number;

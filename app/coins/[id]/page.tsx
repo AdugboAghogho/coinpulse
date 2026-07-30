@@ -6,6 +6,7 @@ import { formatCurrency } from '@/lib/utils';
 import LiveDataWrapper from '@/components/LiveDataWrapper';
 import Converter from '@/components/Converter';
 import SimilarCoins from '@/components/SimilarCoins';
+import CoinMarketsTable from '@/components/CoinMarketsTable';
 
 const Page = async ({ params }: NextPageProps) => {
   const { id } = await params;
@@ -63,11 +64,17 @@ const Page = async ({ params }: NextPageProps) => {
   ];
 
   return (
-    <main id="coin-details-page">
-      <section className="primary">
+    <main id="coin-details-page" className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <section className="primary lg:col-span-2 flex flex-col gap-6">
         <LiveDataWrapper coinId={id} poolId={pool.id} coin={coinData} coinOHLCData={coinOHLCData}>
           <h4>Exchange Listings</h4>
         </LiveDataWrapper>
+
+        <CoinMarketsTable
+          tickers={coinData.tickers}
+          coinName={coinData.name}
+          coinImage={coinData.image.small}
+        />
       </section>
 
       <section className="secondary">
@@ -99,11 +106,8 @@ const Page = async ({ params }: NextPageProps) => {
             ))}
           </ul>
         </div>
-        
-        <SimilarCoins 
-          currentCoinId={id} 
-          categories={coinData.categories} 
-        />
+
+        <SimilarCoins currentCoinId={id} categories={coinData.categories} />
       </section>
     </main>
   );
